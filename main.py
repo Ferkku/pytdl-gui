@@ -3,14 +3,16 @@
 # =================
 
 import customtkinter as ctki
-from utils import Download, CombineAV
+from utils import DownloadAdaptive, DownloadProgressive, CombineAV, GetStreams
 from dotenv import load_dotenv
 import os
+from PIL import Image, ImageTk
 
 # =================
 # Globals
 # =================
 load_dotenv()
+PROGRESSIVE = False
 
 # .env
 DEFAULT_PATH = os.getenv("DEFAULT_PATH")
@@ -20,11 +22,10 @@ DOWNLOAD_URL = os.getenv("DOWNLOAD_URL")
 # =================
 # Classes
 # =================
-class BaseFrame(ctki.CTkFrame):
+class BaseFrame(ctki.CTkScrollableFrame):
     def __init__(self, master, width=600, corner_radius=10):
         super().__init__(master, width=width, corner_radius=corner_radius)
 
-        self.grid_propagate(False)
         self.grid_columnconfigure((0, 1, 2), weight=1)
 
         # URL
@@ -66,7 +67,61 @@ class URLFrame(ctki.CTkFrame):
         self.url_textbox = ctki.CTkTextbox(
             self, height=20, width=600, corner_radius=10)
         self.url_textbox.grid(row=1, column=0, padx=10,
-                              pady=(5, 20), sticky="ew")
+                              pady=(5, 10), sticky="ew")
+
+        self.audio_only_var = ctki.StringVar(value="off")
+        self.audio_only = ctki.CTkCheckBox(
+            self,
+            text="Audio Only",
+            command=self.audio_only_event,
+            variable=self.audio_only_var,
+            onvalue="on",
+            offvalue="off"
+        )
+        self.audio_only.grid(row=2, column=0, padx=20,
+                             pady=(0, 10), sticky="w")
+
+        self.get_streams = ctki.CTkButton(
+            self,
+            text="Get Options",
+            command=self.get_streams_event,
+        )
+        self.get_streams.grid(
+            row=3,
+            column=0,
+            padx=5,
+            pady=5,
+            sticky="ew"
+        )
+
+        self.thumb_placeholder = Image.new("RGB", (100, 100), color="black")
+        self.thumb_placeholder_img = ImageTk.PhotoImage(self.thumb_placeholder)
+        self.thumb_label = ctki.CTkLabel(
+            self, image=self.thumb_placeholder_img, text="")
+        self.thumb_label.grid(
+            row=4,
+            column=0,
+            padx=10,
+            pady=10,
+            sticky="ew"
+        )
+
+    def audio_only_event(self):
+        print("Checkbox toggled: ", self.audio_only_var.get())
+
+    def get_streams_event(self):
+        print("Get Streams pressed")
+        url = self.url_textbox.get("0.0", "end").rstrip("\n")
+        only_audio = self.audio_only_var.get() == "on"
+
+        if url:
+            print(url)
+            data = GetStreams(url, only_audio)
+            if data["thumbnail"]:
+                thumbnail = ImageTk.PhotoImage(data["thumbnail"])
+                self.thumb_label.configure(image=thumbnail)
+        else:
+            print("No URL")
 
 
 class App(ctki.CTk):
@@ -88,9 +143,18 @@ class App(ctki.CTk):
         self.base_frame.grid(row=1, column=0, pady=20, sticky="ns")
 
 
-if __name__ == "__main__":
-    v, a, t = Download(DOWNLOAD_URL, DEFAULT_PATH)
-    # CombineAV(v, a, DEFAULT_PATH, t)
+def Main():
+    """
+    if PROGRESSIVE:
+        v = DownloadProgressive(DOWNLOAD_URL, DEFAULT_PATH)
+    else:
+        v, a, t = DownloadAdaptive(DOWNLOAD_URL, DEFAULT_PATH)
+        CombineAV(v, a, DEFAULT_PATH, t)
+    """
 
-    # app = App()
-    # app.mainloop()
+    app = App()
+    app.mainloop()
+
+
+if __name__ == "__main__":
+    Main()
