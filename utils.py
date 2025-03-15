@@ -8,7 +8,8 @@ from io import BytesIO
 def GetStreams(URL, only_audio):
     yt = YouTube(URL)
     try:
-        streams = yt.streams.filter(only_audio=only_audio)
+        streams = yt.streams.filter(
+            only_audio=only_audio).order_by("resolution").desc()
         thumb = None
         r = requests.get(yt.thumbnail_url)
         if r.status_code == 200:
