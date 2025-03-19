@@ -55,7 +55,8 @@ def Download(itag, streams, path, title, delete_temp=True):
             print(f"Download failed! Exception: {e}")
             return False
     elif stream.type == "video":
-        audio_stream = streams.filter(only_audio=True).first()
+        audio_stream = streams.filter(
+            only_audio=True, file_extension=ExtractFileExtension(stream)).first()
         audio_title = f"{uuid.uuid4().hex}_a.{
             ExtractFileExtension(audio_stream)}"
 
@@ -73,7 +74,8 @@ def Download(itag, streams, path, title, delete_temp=True):
         audio_path = path + audio_title
 
         if os.path.exists(video_path) and os.path.exists(audio_path):
-            CombineAV(video_path, audio_path, path, title)
+            CombineAV(video_path, audio_path, path,
+                      title, stream_file_extension)
             if delete_temp:
                 print("Deleting temporary files")
                 DeleteFile(video_path)
@@ -89,12 +91,12 @@ def Download(itag, streams, path, title, delete_temp=True):
     return True
 
 
-def CombineAV(video_path, audio_path, output_path, title):
+def CombineAV(video_path, audio_path, output_path, title, file_extension):
     print(f"Combining:\n    video: {video_path}\n    audio: {audio_path}")
     try:
         video = ffmpeg.input(video_path)
         audio = ffmpeg.input(audio_path)
-        final = output_path + title + ".mp4"
+        final = output_path + title + file_extension
         ffmpeg.output(video, audio, final,
                       vcodec="copy", acodec="copy").run(overwrite_output=True, quiet=True)
 

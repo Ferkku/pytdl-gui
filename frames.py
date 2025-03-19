@@ -48,6 +48,8 @@ class BaseFrame(ctki.CTkScrollableFrame):
         self.stream_opt_radio = tkinter.IntVar(value=-1)
         self.video_title = ""
 
+        self.download_path = os.getcwd()
+
         # URL
         self.url_frame = URLFrame(self)
         self.url_frame.grid(row=0, column=0, padx=10, pady=10)
@@ -60,6 +62,10 @@ class BaseFrame(ctki.CTkScrollableFrame):
         self.download_frame = DownloadFrame(self)
         self.download_frame.grid(row=2, column=0, padx=10, pady=10)
 
+        # DOWNLOAD PATH
+        self.download_path_frame = DownloadPathFrame(self)
+        self.download_path_frame.grid(row=3, column=0, padx=10, pady=10)
+
     def mouse_wheel_event(self, master):
         def scroll(e):
             self._parent_canvas.yview_scroll(-1 * (e.delta // 120), "units")
@@ -69,6 +75,55 @@ class BaseFrame(ctki.CTkScrollableFrame):
             "<Button-4>", lambda e: self._parent_canvas.yview_scroll(-1, "units"))
         master.bind_all(
             "<Button-5>", lambda e: self._parent_canvas.yview_scroll(1, "units"))
+
+
+class DownloadPathFrame(ctki.CTkFrame):
+    def __init__(self, master):
+        super().__init__(master)
+
+        # Title
+        self.title = ctki.CTkLabel(self, text="Enter download path:")
+        self.title.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+        # Textbox
+        self.path_textbox = ctki.CTkTextbox(
+            self, height=20, width=500, corner_radius=10)
+        self.path_textbox.grid(row=1, column=0, padx=10,
+                               pady=(5, 5), sticky="ew")
+
+        # Check path button
+        self.check_path_button = ctki.CTkButton(
+            self,
+            text="Apply",
+            command=self.check_download_path,
+            width=30,
+        )
+        self.check_path_button.grid(
+            row=1,
+            column=1,
+            padx=5,
+            pady=5,
+        )
+
+        # Set path
+        self.current_path = ctki.CTkLabel(
+            self, text_color="white", text=f"Current: {master.download_path}")
+        self.current_path.grid(row=2, column=0, padx=10, pady=0, sticky="w")
+
+    def check_download_path(self):
+        path = self.path_textbox.get("0.0", "end").rstrip("\n")
+
+        if path == "":
+            self.master.download_path = os.getcwd()
+            self.current_path.configure(
+                text_color="white", text=f"Current: {self.master.download_path}")
+        elif os.path.exists(path):
+            self.master.download_path = path
+            self.current_path.configure(
+                text_color="white", text=f"Current: {self.master.download_path}")
+        else:
+            self.master.download_path = ""
+            self.current_path.configure(text_color="red", text="INVALID PATH")
 
 
 class StreamOptionsFrame(ctki.CTkFrame):
@@ -145,9 +200,13 @@ class DownloadFrame(ctki.CTkFrame):
         self.download_button.grid(row=0, column=0, padx=20, pady=20)
 
     def download_button_click(self):
-        itag = self.master.stream_opt_radio.get()
-        Download(itag, self.master.streams,
-                 DEFAULT_PATH, self.master.video_title)
+        if os.path.exists(self.master.download_path):
+            opt = self.master.stream_opt_radio.get()
+            if opt != -1:
+                itag = self.master.stream_opt_radio.get()
+                Download(itag, self.master.streams,
+                         self.master.download_path + "/", self.master.video_title)
+                self.master.stream_opt_radio.set(-1)
 
 
 class URLFrame(ctki.CTkFrame):
