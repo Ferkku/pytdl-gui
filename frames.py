@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 import tkinter
 from dotenv import load_dotenv
 import os
+import logging
 
 
 # =================
@@ -18,10 +19,13 @@ load_dotenv()
 DEFAULT_PATH = os.getenv("DEFAULT_PATH")
 DOWNLOAD_URL = os.getenv("DOWNLOAD_URL")
 
+logging.basicConfig(level=logging.ERROR)
 
 # =================
 # Classes
 # =================
+
+
 class TitleFrame(ctki.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
@@ -146,7 +150,7 @@ class StreamOptionsFrame(ctki.CTkFrame):
             row=1,
             column=0,
             padx=10,
-            pady=0,
+            pady=(0, 20),
             sticky="w",
         )
 
@@ -155,7 +159,7 @@ class StreamOptionsFrame(ctki.CTkFrame):
     def update_streams(self, data):
         for b in self.radio_buttons:
             b.destroy()
-            b = None
+        self.radio_buttons.clear()
 
         if data:
             thumbnail = ImageTk.PhotoImage(data["thumbnail"])
@@ -166,6 +170,7 @@ class StreamOptionsFrame(ctki.CTkFrame):
                 only_audio=self.master.only_audio_check)
 
             row_index = 2
+
             for stream in self.master.streams:
                 if stream.type == "audio":
                     but = ctki.CTkRadioButton(
@@ -183,7 +188,8 @@ class StreamOptionsFrame(ctki.CTkFrame):
                         value=stream.itag
                     )
                 but.grid(
-                    row=row_index, column=0, pady=5)
+                    row=row_index, column=0, padx=20, pady=5, sticky="w")
+
                 row_index += 1
                 self.radio_buttons.append(but)
 
@@ -254,19 +260,19 @@ class URLFrame(ctki.CTkFrame):
         )
 
     def audio_only_event(self):
-        print("Checkbox toggled: ", self.audio_only_var.get())
+        logging.debug("Checkbox toggled: ", self.audio_only_var.get())
         if self.audio_only_var.get() == "on":
             self.master.only_audio_check = True
         else:
             self.master.only_audio_check = False
 
     def get_streams_event(self):
-        print("Get Streams pressed")
+        logging.debug("Get Streams pressed")
         url = self.url_textbox.get("0.0", "end").rstrip("\n")
 
         if url:
-            print(url)
+            logging.debug(url)
             data = GetStreams(url)
             self.master.stream_opts_frame.update_streams(data)
         else:
-            print("No URL")
+            logging.debug("No URL")

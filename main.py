@@ -1,7 +1,7 @@
 from app import App
 
-# FIX: error when making a second stream request
-# TODO: add a field to give download path
+# TODO: Add some type of download indicator?
+# TODO: Add option to download the thumbnail
 
 
 def Main():
