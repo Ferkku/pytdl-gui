@@ -5,7 +5,6 @@ import customtkinter as ctki
 from utils import Download, GetStreams
 from PIL import Image, ImageTk
 import tkinter
-from dotenv import load_dotenv
 import os
 import logging
 
@@ -13,11 +12,6 @@ import logging
 # =================
 # Globals
 # =================
-load_dotenv()
-
-# .env
-DEFAULT_PATH = os.getenv("DEFAULT_PATH")
-DOWNLOAD_URL = os.getenv("DOWNLOAD_URL")
 
 logging.basicConfig(level=logging.ERROR)
 
