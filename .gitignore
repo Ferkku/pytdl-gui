@@ -1,4 +1,5 @@
 .env
+*.spec
 __pycache__
 /venv
 /dist
