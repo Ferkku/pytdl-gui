@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 import tkinter
 import os
 import logging
+import threading
 
 
 # =================
@@ -171,7 +172,8 @@ class StreamOptionsFrame(ctki.CTkFrame):
                         self,
                         text=f"<{stream.mime_type}> <{stream.abr}>",
                         variable=self.master.stream_opt_radio,
-                        value=stream.itag
+                        value=stream.itag,
+                        command=self.radio_selected,
                     )
                 else:
                     but = ctki.CTkRadioButton(
@@ -179,13 +181,21 @@ class StreamOptionsFrame(ctki.CTkFrame):
                         text=f"<{stream.mime_type}> <{
                             stream.resolution}> <{stream.fps}fps>",
                         variable=self.master.stream_opt_radio,
-                        value=stream.itag
+                        value=stream.itag,
+                        command=self.radio_selected,
                     )
                 but.grid(
                     row=row_index, column=0, padx=20, pady=5, sticky="w")
 
                 row_index += 1
                 self.radio_buttons.append(but)
+
+    def radio_selected(self):
+        if self.master.stream_opt_radio.get() != 1:
+            self.master.download_frame.download_button.configure(
+                text="Download",
+                state="normal",
+            )
 
 
 class DownloadFrame(ctki.CTkFrame):
@@ -196,7 +206,11 @@ class DownloadFrame(ctki.CTkFrame):
 
         # Download
         self.download_button = ctki.CTkButton(
-            self, text="Download", command=self.download_button_click)
+            self,
+            text="Select Option",
+            command=self.download_button_click,
+            state="disabled",
+        )
         self.download_button.grid(row=0, column=0, padx=20, pady=20)
 
     def download_button_click(self):
@@ -204,9 +218,28 @@ class DownloadFrame(ctki.CTkFrame):
             opt = self.master.stream_opt_radio.get()
             if opt != -1:
                 itag = self.master.stream_opt_radio.get()
-                Download(itag, self.master.streams,
-                         self.master.download_path + "/", self.master.video_title)
+                self.download_button.configure(
+                    text="Downloading...", state="disabled")
+                download_thread = threading.Thread(
+                    target=Download,
+                    args=(
+                        itag,
+                        self.master.streams,
+                        self.master.download_path + "/",
+                        self.master.video_title
+                    ),
+                    daemon=True
+                )
+                download_thread.start()
+                self.check_download_thread(download_thread)
                 self.master.stream_opt_radio.set(-1)
+
+    def check_download_thread(self, t):
+        if t.is_alive():
+            self.after(100, lambda: self.check_download_thread(t))
+        else:
+            self.download_button.configure(
+                text="Select Option", state="disabled")
 
 
 class URLFrame(ctki.CTkFrame):
