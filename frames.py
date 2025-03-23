@@ -8,6 +8,7 @@ import tkinter
 import os
 import logging
 import threading
+import platform
 
 
 # =================
@@ -39,7 +40,8 @@ class BaseFrame(ctki.CTkScrollableFrame):
 
         self.grid_columnconfigure(0, weight=1)
 
-        self.mouse_wheel_event(master)
+        if platform.system() != "Windows":
+            self.mouse_wheel_event(master)
 
         self.only_audio_check = False
 
@@ -178,8 +180,7 @@ class StreamOptionsFrame(ctki.CTkFrame):
                 else:
                     but = ctki.CTkRadioButton(
                         self,
-                        text=f"<{stream.mime_type}> <{
-                            stream.resolution}> <{stream.fps}fps>",
+                        text=f"<{stream.mime_type}> <{stream.resolution}> <{stream.fps}fps>",
                         variable=self.master.stream_opt_radio,
                         value=stream.itag,
                         command=self.radio_selected,
