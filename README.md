@@ -16,3 +16,8 @@ Simple GUI application build with CustomTkinter that allows downloading youtube 
 ```bash
 pip install -r requirements.txt
 ```
+
+## Images
+
+![pytdl](images/pytdl1.png)
+![pytdl](images/pytdl2.png)
